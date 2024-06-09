@@ -99,7 +99,7 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
     
 
 
-base_path = 'bettingSim/Data/'
+base_path = 'Data/'
 #file_ppath = 'bettingSim/Data/E0.csv'  # Update this to your file path
 #e0_data = pd.read_csv(file_ppath)
 training_leagues = []
@@ -122,7 +122,7 @@ for number in file_numbers:
 # Create an empty league table
 #league_table = {}
 index = 1
-runs = 4
+runs = 6
 fullRun = 1
 # Iterate through each row in the dataset and update the league table
 for leagues in training_leagues:

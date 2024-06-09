@@ -22,13 +22,15 @@ from my_envV2 import BettingEnv
 
 
 training_leagues = []
+
 env = BettingEnv()
 env.reset()
 
-file_path = 'bettingSim/Data/2021.csv'  # Update this to your file path
+file_path = 'Data/2021.csv'  # Update this to your file path
+
 df = pd.read_csv(file_path)
 training_leagues.append(df)
-file_path = 'bettingSim/Data/2022.csv'
+file_path = 'Data/2022.csv'
 df = pd.read_csv(file_path)
 training_leagues.append(df)
 
@@ -66,7 +68,7 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 try:
     #dqn.load_weights('dqn_betting_model_weights.h5f')
     #dqn.load_weights('test_weights.h5f')
-    dqn.load_weights('test_weights_Test1.h5f')
+    dqn.load_weights('test_weights.h5f')
     print("Weights loaded successfully!")
 except Exception as e:
     print("An error occurred:", str(e))
