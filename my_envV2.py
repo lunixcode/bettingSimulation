@@ -445,14 +445,7 @@ class BettingEnv(gym.Env):
         home_team = row['HomeTeam']
         away_team = row['AwayTeam']
 
-        if home_team in self.league_table:
-            games = self.league_table['Crystal Palace']['Matches Played']
-        else:
-            # Handle the case where 'Crystal Palace' is not in the dictionary
-            games = 0
-        #games = league_table[home_team]['Matches Played']
-            
-            #*******************DEBUG
+        #*******************DEBUG
         #print("Home team: ", row['HomeTeam'], "    Away team: ", row['AwayTeam'])
 
         if(index < revSearchVal):

@@ -34,6 +34,30 @@ from my_envV2 import BettingEnv
 # Start timing
 start_time = time.time()
 # Load the E0.csv file
+uniqueTeams = 24
+rowsPerSeason = (uniqueTeams - 1) * uniqueTeams
+base_path = 'Data/'
+#file_ppath = 'bettingSim/Data/E0.csv'  # Update this to your file path
+#e0_data = pd.read_csv(file_ppath)
+training_leagues = []
+league_table = {}
+dataframes = []
+file_numbers = [ 1, 2, 3, 4, 5, 6, 7, 8 , 9, 10]
+
+# Okay i want to load lower leagues next, then foriegn leagues and finally have it pick leagues at random.
+
+for number in file_numbers:
+    # Generate the file path by combining the base path and the number
+    file_name = f'E1 ({number}).csv'
+    file_path = f'{base_path}{file_name}'
+    
+    # Use pd.read_csv() to read the CSV file
+    df = pd.read_csv(file_path)
+    
+
+
+    # Append the DataFrame to the list
+    training_leagues.append(df)
 
 env = BettingEnv()
 env.reset()
@@ -98,32 +122,12 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 #print(league_table_df)
     
 
-
-base_path = 'Data/'
-#file_ppath = 'bettingSim/Data/E0.csv'  # Update this to your file path
-#e0_data = pd.read_csv(file_ppath)
-training_leagues = []
-dataframes = []
-file_numbers = [ 1, 2, 3, 4, 5, 6, 7, 8 , 9, 10]
-
-# Okay i want to load lower leagues next, then foriegn leagues and finally have it pick leagues at random.
-
-for number in file_numbers:
-    # Generate the file path by combining the base path and the number
-    file_name = f'E0 ({number}).csv'
-    file_path = f'{base_path}{file_name}'
-    
-    # Use pd.read_csv() to read the CSV file
-    df = pd.read_csv(file_path)
-    
-    # Append the DataFrame to the list
-    training_leagues.append(df)
-
 # Create an empty league table
 #league_table = {}
 index = 1
 runs = 6
 fullRun = 1
+lSize = 0
 # Iterate through each row in the dataset and update the league table
 for leagues in training_leagues:
     env.load_data(leagues)
@@ -131,7 +135,7 @@ for leagues in training_leagues:
 
         # ************ IMPORTANT ***********
         #env is environment, steps is how many games    
-        dqn.fit(env, nb_steps=380, visualize=False, verbose=2)
+        dqn.fit(env, nb_steps=rowsPerSeason, visualize=False, verbose=2)
         print("RUN: ", index)
         index+=1
 
@@ -146,7 +150,7 @@ for leagues in training_leagues:
         else:
             pass
     
-dqn.save_weights('new_weights_Test1.h5f', overwrite=True)
+dqn.save_weights('new_weights_Test2.h5f', overwrite=True)
 
 
 end_time = time.time()
