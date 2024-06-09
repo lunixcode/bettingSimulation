@@ -1,0 +1,110 @@
+# Example for observation space: normalized league standings and recent performance
+        # This is a placeholder. You'll need to adjust the size based on your actual state representation
+        num_form_values = 2  
+        num_point_values = 1
+        num_odds_values = 3
+
+        # Define the observation space
+        '''self.observation_space = spaces.Box(
+            low=np.array([0] * num_form_values + [-np.inf] * num_point_values + [0] * num_odds_values),
+            high=np.array([1] * num_form_values + [np.inf] * num_point_values + [1] * num_odds_values),
+            dtype=np.float32
+        )'''
+
+
+
+for league_table in league_tables:
+    for episode in range(number_of_episodes):  # e.g., 100
+        state = env.reset()  # Reset environment for a new episode
+        for game in range(number_of_games_per_episode):  # e.g., 10
+            action = agent.choose_action(state)  # Agent chooses an action based on the current state
+            next_state, reward, done, _ = env.step(action)  # Environment processes the action
+            agent.learn(state, action, reward, next_state)  # Agent learns from the action's outcome
+            state = next_state  # Update the state for the next game
+            if done:
+                break  # End of episode
+
+
+            import random  # To introduce randomness and control behavior over time
+
+def training_with_priming(training_leagues, prime_seasons=2, decrease_guidance_per_season=0.1):
+    index = 0
+
+    for league in training_leagues:
+        env.load_data(league)
+
+        # PRIME PHASE: First  'prime_seasons'
+        if index < prime_seasons:  
+            provide_correct_action = True
+
+        # TRANSITION/INDEPENDENT PHASE: Depends on season number
+        else:
+            prob_correct_action = 1.0 - (index - prime_seasons) * decrease_guidance_per_season
+            provide_correct_action = random.random() < prob_correct_action
+
+        # Your existing reinforcement learning loop
+        for step in range(3800): 
+            current_state = env.get_state()  # Get environment state 
+
+            if provide_correct_action:
+                correct_action = calculate_correct_action(current_state)  # *** You'll need this logic ***
+                action = correct_action 
+            else:
+                action = dqn.select_action(current_state)  # Let the agent explore
+
+            # ... rest of your RL training loop logic  ...
+
+        print("RUN: ", index)
+        index += 1
+
+    dqn.save_weights('new_weights.h5f', overwrite=True)
+
+# Usage
+training_with_priming(training_leagues) 
+
+
+
+
+
+
+
+class CustomModel(keras.Model):
+    def train_step(self, data):
+        # Unpack the data. Its structure depends on your model and
+        # on what you pass to `fit()`.
+        x, y = data
+
+        with tf.GradientTape() as tape:
+            y_pred = self(x, training=True)  # Forward pass
+            # Compute the loss value
+            # (the loss function is configured in `compile()`)
+            loss = self.compute_loss(y=y, y_pred=y_pred)
+
+        # Compute gradients
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+        # Update weights
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        # Update metrics (includes the metric that tracks the loss)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y, y_pred)
+        # Return a dict mapping metric names to current value
+        return {m.name: m.result() for m in self.metrics}
+
+import numpy as np
+
+# Construct and compile an instance of CustomModel
+inputs = keras.Input(shape=(32,))
+outputs = keras.layers.Dense(1)(inputs)
+model = CustomModel(inputs, outputs)
+model.compile(optimizer="adam", loss="mse", metrics=["mae"])
+
+# Just use `fit` as usual
+x = np.random.random((1000, 32))
+y = np.random.random((1000, 1))
+model.fit(x, y, epochs=3)
+
+exit()
