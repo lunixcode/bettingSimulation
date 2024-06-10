@@ -39,6 +39,7 @@ class BettingEnv(gym.Env):
         self.draws = 0
         self.printdbg = 0
         self.betVal = 100
+        self.envState = 0
         # Define action and observation space
         # Assuming actions are discrete bets: 0 = bet on team A, 1 = draw , 2 = bet on team B
         self.action_space = spaces.Discrete(3)
@@ -46,7 +47,7 @@ class BettingEnv(gym.Env):
 
         # Example for observation space: normalized league standings and recent performance
         # This is a placeholder. You'll need to adjust the size based on your actual state representation
-        num_form_values = 2  
+        num_form_values = 4  
         num_point_values = 1
         num_odds_values = 3
 
@@ -56,6 +57,7 @@ class BettingEnv(gym.Env):
             high=np.array([1] * (num_form_values + num_point_values + num_odds_values)),
             dtype=np.float32
         )
+
         '''self.observation_space = spaces.Box(
             low=np.array([0] * num_form_values + [-np.inf] * num_point_values + [0] * num_odds_values),
             high=np.array([1] * num_form_values + [np.inf] * num_point_values + [1] * num_odds_values),
@@ -105,7 +107,7 @@ class BettingEnv(gym.Env):
         # Implement the logic of the action (betting)
         # For example, this could involve updating the league based on the bet,
         # determining if the bet was successful, etc.
-        if self.current_game_index < 4:
+        if self.current_game_index < 30:
             #dont really want the Agent to start predicting actions until 5 games into the season
             self.update_league_table(row, self.league_table)
         else:
@@ -113,8 +115,9 @@ class BettingEnv(gym.Env):
             #homeForm, awayForm = self.backHomeSearch( row, self.current_game_index)
             #odds_probability = self.normalizedOdds(row)
             #normalLeaguePos = self.normalizedLeaguePos(row)
+            if(self.league_table[row['HomeTeam']]['Matches Played'] > 6):
 
-            self.update_state( row)
+                self.update_state( row)
 
             #print("Normalised League Pos: ", normalLeaguePos)
             self.update_league_table(row, self.league_table)
@@ -311,7 +314,7 @@ class BettingEnv(gym.Env):
         odds_probability = [1/3, 1/3, 1/3]  # Equal starting probabilities
 
         # Combine into a state vector
-        self.state = np.array([home_form, away_form, points_diff] + odds_probability)
+        self.state = np.array([home_form, away_form, 0.5, 0.5, points_diff] + odds_probability)
         self.countForEpisode = 0
 
         return self.state
@@ -328,13 +331,24 @@ class BettingEnv(gym.Env):
         #away_form = new_data['away_form']  # normalized value between 0 and 1
         #points_diff = new_data['points_diff']  # normalized value
         #odds = new_data['odds']  # list of three values summing to 1
+        if(self.envState == 0):
 
-        homeForm, awayForm = self.backHomeSearch( row, self.current_game_index)
-        hForm, aForm = self.formBackSearch(row, self.current_game_index )
-        odds_probability = self.normalizedOdds(row)
-        normalLeaguePos = self.normalizedLeaguePos(row)
+            homeForm, awayForm = self.backHomeSearch( row, self.current_game_index)
+            hForm, aForm = self.formBackSearch(row, self.current_game_index )
+            odds_probability = self.normalizedOdds(row)
+            normalLeaguePos = self.normalizedLeaguePos(row)
 
-        self.state = np.array([homeForm, awayForm, normalLeaguePos] + odds_probability)
+            self.state = np.array([homeForm, awayForm, normalLeaguePos])
+
+        elif(self.envState == 1):
+             
+            homeForm, awayForm = self.backHomeSearch( row, self.current_game_index)
+            hForm, aForm = self.formBackSearch(row, self.current_game_index )
+            odds_probability = self.normalizedOdds(row)
+            normalLeaguePos = self.normalizedLeaguePos(row)
+            self.state = np.array([homeForm, awayForm, hForm, aForm, normalLeaguePos] + odds_probability)
+
+            return 
 
     def normalizedLeaguePos(self, row):
         if row['HomeTeam'] not in self.league_table:
@@ -364,7 +378,7 @@ class BettingEnv(gym.Env):
         return odds_probability
 
     def formBackSearch(self, row, index):
-        revSearchVal = 7
+        revSearchVal = 5
         currentHomeIndex = revSearchVal
         currentAwayIndex = revSearchVal
         currentHomePoints = 0
@@ -548,6 +562,9 @@ class BettingEnv(gym.Env):
         self.e0_data = league_data
         #print("HERE")
         #print(self.league_table)
+
+    def set_state(self, var):
+        self.envState = var
 
     def get_state(self):
         return self.state

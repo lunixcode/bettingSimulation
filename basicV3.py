@@ -25,8 +25,12 @@ from rl.agents import DQNAgent
 from rl.policy import LinearAnnealedPolicy
 import datetime
 from my_envV2 import BettingEnv
+from rl.callbacks import Callback
+from keras.callbacks import TensorBoard
+#from tensorboard.plugins.core import TensorBoard
 #from stable_baselines3.ppo.ppo import PPO
 #from stable_baselines3.common.policies import MlpPolicy
+
 def abbreviate_param(param_name, param_value):
     """Abbreviates a hyperparameter name and combines it with its value.
 
@@ -43,52 +47,23 @@ def abbreviate_param(param_name, param_value):
     return f"{abbrev}{value_str}"
 
 hyper_parameters = {
-    "learning_rate": 0.00075,
+    "learning_rate": 0.001,
     "hidden_layer_size": 128,
     "activation_function": "relu",
     "optimizer": "adam",
-    "runsPerSeason": "6",
-    "totalSeasons": "10",
+    "runsPerSeason": "20",
+    "totalSeasons": "5",
     "uniqueTeams": "24",
     "rewardFunc": "1",
-    "stateSpace": "0",
+    "stateSpace": "1",
     "league": "ch"
 }
 
-# Create the abbreviated string (same as before)
-
-'''
-hyper_parameters = {
-    "learning_rate": 0.05,
-    "hidden_layer_size": 128,
-    "activation_function": "relu",
-    "optimizer": "adam",
-    "runsPerSeason": "6",
-    "totalSeasons": "10",
-    "uniqueTeams": "24",
-    "rewardFunc": "1", 
-    "stateSpace": "0",
-}
-
-def abbreviate_param(param_name, param_value):
-    abbrev = param_name[:2].lower()  # Take the first two characters of the name
-    value_str = str(param_value).replace(".", "")  # Remove any decimal point
-    return f"{abbrev}{value_str}"
-
-# Create the abbreviated string
-abbreviated_params = "".join(abbreviate_param(name, value) for name, value in hyper_parameters.items())
-
-# Write the abbreviated string to a text file
-with open(abbreviated_params, "w") as f:
-    f.write(hyper_parameters)
-
-print("Hyperparameter snapshot saved to hyperparameter_snapshot.txt")
-'''
 
 # Start timing
 start_time = time.time()
 # Load the E0.csv file
-uniqueTeams = 20
+uniqueTeams = 24
 rowsPerSeason = (int(hyper_parameters["uniqueTeams"]) - 1) * int(hyper_parameters["uniqueTeams"])
 base_path = 'Data/'
 #file_ppath = 'bettingSim/Data/E0.csv'  # Update this to your file path
@@ -96,27 +71,27 @@ base_path = 'Data/'
 training_leagues = []
 league_table = {}
 dataframes = []
-file_numbers = [ 1, 2, 3, 4, 5, 6, 7, 8 , 9, 10]
+file_numbers = [ 1, 2, 3, 4, 5, 6, 7, 8 , 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 ,19, 20, 21, 22, 23, 24, 25, 26, 27, 28 , 29, 30 , 31, 32, 33, 34, 35, 36, 37, 38 , 39, 40]
 
 # Okay i want to load lower leagues next, then foriegn leagues and finally have it pick leagues at random.
 
 for number in file_numbers:
     # Generate the file path by combining the base path and the number
-    file_name = f'E1 ({number}).csv'
-    file_path = f'{base_path}{file_name}'
-    
-    # Use pd.read_csv() to read the CSV file
-    df = pd.read_csv(file_path)
-    
+    if (number < int(hyper_parameters['totalSeasons'])):
+        file_name = f'E1 ({number}).csv'
+        file_path = f'{base_path}{file_name}'
+        
+        # Use pd.read_csv() to read the CSV file
+        df = pd.read_csv(file_path)
 
-
-    # Append the DataFrame to the list
-    training_leagues.append(df)
+        # Append the DataFrame to the list
+        training_leagues.append(df)
 
 env = BettingEnv()
 env.reset()
 
 state_size = env.observation_space.shape[0]
+
 number_of_actions = env.action_space.n
 num_episodes = 1
 
@@ -182,13 +157,21 @@ index = 1
 runs = 6
 fullRun = 1
 lSize = 0
+
+
+
+# Optional: Create a custom callback to track additional metrics
+
+
 # Iterate through each row in the dataset and update the league table
 for leagues in training_leagues:
     env.load_data(leagues)
+    env.set_state(1)
     for i in range(int(hyper_parameters["runsPerSeason"])):
 
         # ************ IMPORTANT ***********
         #env is environment, steps is how many games    
+
         dqn.fit(env, nb_steps=rowsPerSeason, visualize=False, verbose=2)
         print("RUN: ", index)
         index+=1
@@ -220,9 +203,11 @@ with open(snapshot_filename, "w") as f:
     json.dump(hyper_parameters, f)
 
 
-dqn.save_weights('weights/new_weights_Test_7.h5f', overwrite=True)
+dqn.save_weights('weights/new_weights_Test_8.h5f', overwrite=True)
 dqn.save_weights(weights_filename, overwrite=True)
 
+log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
 end_time = time.time()
 

@@ -114,7 +114,7 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 try:
     #dqn.load_weights('dqn_betting_model_weights.h5f')
     #dqn.load_weights('test_weights.h5f')
-    dqn.load_weights('weights/new_weights_Test_5.h5f')
+    dqn.load_weights('weights/new_weights_Test_8.h5f')
     #dqn.load_weights('new_weights_Test_3.h5f')
     print("Weights loaded successfully!")
 except Exception as e:
@@ -123,12 +123,15 @@ except Exception as e:
 episodes = 38
 for test_league in training_leagues:  # test_leagues contains your two new seasons
     env.load_data(test_league)
+    env.set_state(1)
     total_reward = 0
     done = False
     observation = env.reset()
+    #print(observation)
     #or i in range(episodes):
     while not done:
-        reshaped_observation = observation.reshape(1, 1, 6)
+        #print(observation)
+        reshaped_observation = observation.reshape(1, 1, state_size)
         action = np.argmax(dqn.model.predict(reshaped_observation))
         
         observation, reward, done, _ = env.step(action)
