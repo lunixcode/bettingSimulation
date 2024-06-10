@@ -5,7 +5,7 @@
 #   pip install gym
 #   pip install keras-rl2  its RL2 not R12
 
-
+import os
 import pandas as pd
 import time
 import tensorflow as tf
@@ -27,15 +27,69 @@ import datetime
 from my_envV2 import BettingEnv
 #from stable_baselines3.ppo.ppo import PPO
 #from stable_baselines3.common.policies import MlpPolicy
+def abbreviate_param(param_name, param_value):
+    """Abbreviates a hyperparameter name and combines it with its value.
 
+    Args:
+        param_name (str): The name of the hyperparameter.
+        param_value (str or float or int): The value of the hyperparameter.
 
+    Returns:
+        str: The abbreviated string (e.g., "lr01hls128afreluoArps6ts10ut20rf1sp0").
+    """
 
+    abbrev = param_name[:2].lower()  # Take the first two characters of the name
+    value_str = str(param_value).replace(".", "")  # Remove any decimal point
+    return f"{abbrev}{value_str}"
+
+hyper_parameters = {
+    "learning_rate": 0.00075,
+    "hidden_layer_size": 128,
+    "activation_function": "relu",
+    "optimizer": "adam",
+    "runsPerSeason": "6",
+    "totalSeasons": "10",
+    "uniqueTeams": "24",
+    "rewardFunc": "1",
+    "stateSpace": "0",
+    "league": "ch"
+}
+
+# Create the abbreviated string (same as before)
+
+'''
+hyper_parameters = {
+    "learning_rate": 0.05,
+    "hidden_layer_size": 128,
+    "activation_function": "relu",
+    "optimizer": "adam",
+    "runsPerSeason": "6",
+    "totalSeasons": "10",
+    "uniqueTeams": "24",
+    "rewardFunc": "1", 
+    "stateSpace": "0",
+}
+
+def abbreviate_param(param_name, param_value):
+    abbrev = param_name[:2].lower()  # Take the first two characters of the name
+    value_str = str(param_value).replace(".", "")  # Remove any decimal point
+    return f"{abbrev}{value_str}"
+
+# Create the abbreviated string
+abbreviated_params = "".join(abbreviate_param(name, value) for name, value in hyper_parameters.items())
+
+# Write the abbreviated string to a text file
+with open(abbreviated_params, "w") as f:
+    f.write(hyper_parameters)
+
+print("Hyperparameter snapshot saved to hyperparameter_snapshot.txt")
+'''
 
 # Start timing
 start_time = time.time()
 # Load the E0.csv file
-uniqueTeams = 24
-rowsPerSeason = (uniqueTeams - 1) * uniqueTeams
+uniqueTeams = 20
+rowsPerSeason = (int(hyper_parameters["uniqueTeams"]) - 1) * int(hyper_parameters["uniqueTeams"])
 base_path = 'Data/'
 #file_ppath = 'bettingSim/Data/E0.csv'  # Update this to your file path
 #e0_data = pd.read_csv(file_ppath)
@@ -91,7 +145,7 @@ dqn = DQNAgent(model=model,
                nb_actions=number_of_actions, 
                memory=memory, 
                nb_steps_warmup=1000,
-               target_model_update=0.001, 
+               target_model_update=hyper_parameters['learning_rate'], 
                policy=policy)
 
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
@@ -131,7 +185,7 @@ lSize = 0
 # Iterate through each row in the dataset and update the league table
 for leagues in training_leagues:
     env.load_data(leagues)
-    for i in range(runs):
+    for i in range(int(hyper_parameters["runsPerSeason"])):
 
         # ************ IMPORTANT ***********
         #env is environment, steps is how many games    
@@ -150,7 +204,24 @@ for leagues in training_leagues:
         else:
             pass
     
-dqn.save_weights('new_weights_Test2.h5f', overwrite=True)
+
+weights_folder = "weights"
+os.makedirs(weights_folder, exist_ok=True)  # Create the folder if needed
+
+abbreviated_params = "".join(abbreviate_param(name, value) for name, value in hyper_parameters.items())
+
+# Construct the filenames using the abbreviated string and extensions
+snapshot_filename = os.path.join(weights_folder, f"{abbreviated_params}.txt")
+weights_filename = os.path.join(weights_folder, f"{abbreviated_params}.h5f")
+
+# Write the dictionary data to the file (same as before)
+with open(snapshot_filename, "w") as f:
+    import json
+    json.dump(hyper_parameters, f)
+
+
+dqn.save_weights('weights/new_weights_Test_7.h5f', overwrite=True)
+dqn.save_weights(weights_filename, overwrite=True)
 
 
 end_time = time.time()

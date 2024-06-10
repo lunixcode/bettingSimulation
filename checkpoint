@@ -1,2 +1,2 @@
-model_checkpoint_path: "new_weights_Test2.h5f"
-all_model_checkpoint_paths: "new_weights_Test2.h5f"
+model_checkpoint_path: "le000075hi128acreluopadamru6to10un20re1st0lech.h5f"
+all_model_checkpoint_paths: "le000075hi128acreluopadamru6to10un20re1st0lech.h5f"

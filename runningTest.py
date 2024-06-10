@@ -23,13 +23,25 @@ from my_envV2 import BettingEnv
 
 training_leagues = []
 
+'''This will store the value for Learning Rate
+                                Runs Per Season
+                                Total Seasons
+                                League Size
+                                NN Pattern
+                                Reward Function
+                                State Space (features)
+                                Optimizer
+
+                                "batch_size": 32, 
+                                "num_epochs": 10,
+'''
 env = BettingEnv()
 env.reset()
-
+'''
 file_path = 'Data/2021.csv'  # Update this to your file path
-
 df = pd.read_csv(file_path)
 training_leagues.append(df)
+
 file_path = 'Data/2022.csv'
 df = pd.read_csv(file_path)
 training_leagues.append(df)
@@ -39,6 +51,24 @@ df = pd.read_csv(file_path)
 training_leagues.append(df)
 
 file_path = 'Data/2020.csv'
+df = pd.read_csv(file_path)
+training_leagues.append(df)
+'''
+
+
+file_path = 'Data/E1.csv' 
+df = pd.read_csv(file_path)
+training_leagues.append(df)
+
+file_path = 'Data/E2.csv'
+df = pd.read_csv(file_path)
+training_leagues.append(df)
+
+file_path = 'Data/E3.csv'
+df = pd.read_csv(file_path)
+training_leagues.append(df)
+
+file_path = 'Data/EC.csv'
 df = pd.read_csv(file_path)
 training_leagues.append(df)
 
@@ -65,6 +95,7 @@ model.add(Dense(number_of_actions, activation='linear'))
 memory = SequentialMemory(limit=50000, window_length=1)
 
 policy = EpsGreedyQPolicy()
+checkHyperparam = 1
 
 
 
@@ -83,7 +114,8 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 try:
     #dqn.load_weights('dqn_betting_model_weights.h5f')
     #dqn.load_weights('test_weights.h5f')
-    dqn.load_weights('new_weights_Test1.h5f')
+    dqn.load_weights('weights/new_weights_Test_5.h5f')
+    #dqn.load_weights('new_weights_Test_3.h5f')
     print("Weights loaded successfully!")
 except Exception as e:
     print("An error occurred:", str(e))
