@@ -39,24 +39,36 @@ class BettingEnv(gym.Env):
         self.draws = 0
         self.printdbg = 0
         self.betVal = 100
-        self.envState = 0
+        self.envState = 1
         # Define action and observation space
         # Assuming actions are discrete bets: 0 = bet on team A, 1 = draw , 2 = bet on team B
         self.action_space = spaces.Discrete(3)
         self.countForEpisode = 0
 
-        # Example for observation space: normalized league standings and recent performance
-        # This is a placeholder. You'll need to adjust the size based on your actual state representation
-        num_form_values = 4  
-        num_point_values = 1
-        num_odds_values = 3
-
+        
         # Define the observation space
-        self.observation_space = spaces.Box(
-            low=np.array([0] * (num_form_values + num_point_values + num_odds_values)),
-            high=np.array([1] * (num_form_values + num_point_values + num_odds_values)),
-            dtype=np.float32
-        )
+        if( self.envState == 0):
+            # Example for observation space: normalized league standings and recent performance
+            # This is a placeholder. You'll need to adjust the size based on your actual state representation
+            num_form_values = 2  
+            num_point_values = 1
+            num_odds_values = 3
+
+            self.observation_space = spaces.Box(
+                low=np.array([0] * (num_form_values + num_point_values + num_odds_values)),
+                high=np.array([1] * (num_form_values + num_point_values + num_odds_values)),
+                dtype=np.float32
+            )
+        elif(self.envState == 1):
+            num_form_values = 4  
+            num_point_values = 1
+            num_odds_values = 3
+
+            self.observation_space = spaces.Box(
+                low=np.array([0] * (num_form_values + num_point_values + num_odds_values)),
+                high=np.array([1] * (num_form_values + num_point_values + num_odds_values)),
+                dtype=np.float32
+            )
 
         '''self.observation_space = spaces.Box(
             low=np.array([0] * num_form_values + [-np.inf] * num_point_values + [0] * num_odds_values),
@@ -194,36 +206,36 @@ class BettingEnv(gym.Env):
             if bet_on == 'H':
                 self.home_Wins+=1
                 if self.printdbg:
-                    print("Reward for H: ", 1 -  (1 / (odds[action])), "\n") # (1 / odds[action]) * (1 / 0.46))
+                    print("Reward for H: ", (self.betVal * odds[action]), "\n") # (1 / odds[action]) * (1 / 0.46))
                 #return 1 - (1 /odds[action])
                 #return (odds[action] * (1 / 0.5))
                 #return 1 -  (1 / (odds[action] ))
                 #return (1 / odds[action]) * (1 / 0.5)
                 #return ((1 / odds[action])  / 100) * 54
                 #return 1 - (((1 / odds[action])  / 100) * 54)
-                return self.betVal + (self.betVal * odds[action])
+                return  (self.betVal * odds[action])
             
             elif bet_on == 'D':
                 self.draws+=1
                 if self.printdbg:
-                    print("Reward for D: ",  (1 - (1 /odds[action])) , "\n")#((1 / odds[action])) * (1 / 0.24))
+                    print("Reward for D: ",   (self.betVal * odds[action]) , "\n")#((1 / odds[action])) * (1 / 0.24))
                 #return (1 - (1 /odds[action])) #* 1.85
                 #return  1 -  (1 / ( odds[action]  * ((1 / 0.24))/ (1 / 0.5)))
                 #return (1 / odds[action]) * (1 / 0.24)
                 #return (1 / odds[action]) / 100 * 76 # * 1.85
                 #return (1 - (1 / odds[action])) * 1.85 # 1.47
-                return self.betVal + (self.betVal * odds[action]) 
+                return (self.betVal * odds[action]) 
                 
             else:
                 self.away_Wins+=1
                 if self.printdbg:
-                    print("Reward for A: ", (1 - (1 /odds[action])) , "\n") # ((1 / odds[action])) * (1 / 0.3))
+                    print("Reward for A: ", (self.betVal * odds[action]) , "\n") # ((1 / odds[action])) * (1 / 0.3))
                 #return (1 - (1 /odds[action])) #* 1.54
                 #return 1 -  (1 / ( odds[action]  * ((1 / 0.3)) / (1 / 0.5)))
                 #return (1 / odds[action]) * (1 / 0.3)
                 #return (1 / odds[action])  / 100 * 70 #* 1.54
                 #return (1 - (1 / odds[action])) * 1.54 #1.36
-                return self.betVal + (self.betVal * odds[action]) 
+                return (self.betVal * odds[action]) 
             
             #return bet_amount * (odds) #reward V1
             #return odds #reward V2
@@ -242,7 +254,7 @@ class BettingEnv(gym.Env):
             #return 0 - (1 -(1 /odds[action]))
             if bet_on == 'H':
                 if self.printdbg:
-                    print("Minus Reward for H: ", 0 - (1 / odds[action]), "\n")
+                    print("Minus Reward for H: ",0 - self.betVal, "\n")
                 self.home_Wins+=1
                 #return 0
                 #return 1 - odds[action]
@@ -252,7 +264,7 @@ class BettingEnv(gym.Env):
             
             elif bet_on == 'D':
                 if self.printdbg:
-                    print("Minus Reward for D: ", 0 - (1 / odds[action]), "\n")
+                    print("Minus Reward for D: ", 0 - self.betVal, "\n")
                 self.draws+=1
                 #return 0
                 #return 0 - (1 / odds[action])
@@ -263,7 +275,7 @@ class BettingEnv(gym.Env):
             
             else:
                 if self.printdbg:
-                    print("Minus Reward for A: ", 0 - (1 / odds[action]), "\n")
+                    print("Minus Reward for A: ", 0 - self.betVal, "\n")
                 self.away_Wins+=1
                 #return 0
                 #return 0 - (1 / odds[action])
@@ -314,7 +326,11 @@ class BettingEnv(gym.Env):
         odds_probability = [1/3, 1/3, 1/3]  # Equal starting probabilities
 
         # Combine into a state vector
-        self.state = np.array([home_form, away_form, 0.5, 0.5, points_diff] + odds_probability)
+        if(self.envState == 0):
+            self.state = np.array([home_form, away_form, points_diff] + odds_probability)
+        elif(self.envState == 1):
+            self.state = np.array([home_form, away_form, 0.5, 0.5, points_diff] + odds_probability)
+        
         self.countForEpisode = 0
 
         return self.state
@@ -338,7 +354,7 @@ class BettingEnv(gym.Env):
             odds_probability = self.normalizedOdds(row)
             normalLeaguePos = self.normalizedLeaguePos(row)
 
-            self.state = np.array([homeForm, awayForm, normalLeaguePos])
+            self.state = np.array([homeForm, awayForm, normalLeaguePos]  + odds_probability)
 
         elif(self.envState == 1):
              
@@ -369,9 +385,9 @@ class BettingEnv(gym.Env):
         return 
     
     def normalizedOdds(self, row):
-        best_home_odds = round(1 / row['B365H'],2)  # Home odds in column 'Y'
-        best_draw_odds = round(1 / row['B365D'],2)  # Draw odds in column 'Z'
-        best_away_odds = round(1 / row['B365A'],2) # Away odds in column 'AA'
+        best_home_odds = 1-  round(1 / row['B365H'],2)  # Home odds in column 'Y'
+        best_draw_odds = 1- round(1 / row['B365D'],2)  # Draw odds in column 'Z'
+        best_away_odds = 1- round(1 / row['B365A'],2) # Away odds in column 'AA'
         odds_probability = [best_home_odds, best_draw_odds,best_away_odds]
         #*******************DEBUG
         #print("Home Normalised: ", best_home_odds, "    Draw normalised: ", best_draw_odds,"    Away normaized: ", best_away_odds)

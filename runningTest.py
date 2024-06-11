@@ -22,62 +22,71 @@ from my_envV2 import BettingEnv
 
 
 training_leagues = []
+dataSet = 0
+envState = 1
 
-'''This will store the value for Learning Rate
-                                Runs Per Season
-                                Total Seasons
-                                League Size
-                                NN Pattern
-                                Reward Function
-                                State Space (features)
-                                Optimizer
-
-                                "batch_size": 32, 
-                                "num_epochs": 10,
-'''
 env = BettingEnv()
 env.reset()
-'''
-file_path = 'Data/2021.csv'  # Update this to your file path
-df = pd.read_csv(file_path)
-training_leagues.append(df)
 
-file_path = 'Data/2022.csv'
-df = pd.read_csv(file_path)
-training_leagues.append(df)
+if(dataSet == 0):
 
-file_path = 'Data/2022.csv'
-df = pd.read_csv(file_path)
-training_leagues.append(df)
+    file_path = 'Data/2023.csv'
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
+    file_path = 'Data/2023.csv'
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
 
-file_path = 'Data/2020.csv'
-df = pd.read_csv(file_path)
-training_leagues.append(df)
-'''
+    file_path = 'Data/2022.csv'
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
+    file_path = 'Data/2022.csv'
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
 
+    file_path = 'Data/2021.csv'  # Update this to your file path
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
+    file_path = 'Data/2021.csv'  # Update this to your file path
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
 
-file_path = 'Data/E1.csv' 
-df = pd.read_csv(file_path)
-training_leagues.append(df)
+    file_path = 'Data/2020.csv'
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
+    file_path = 'Data/2020.csv'
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
+    
+elif(dataSet == 1):
 
-file_path = 'Data/E2.csv'
-df = pd.read_csv(file_path)
-training_leagues.append(df)
+    file_path = 'Data/E1.csv' 
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
 
-file_path = 'Data/E3.csv'
-df = pd.read_csv(file_path)
-training_leagues.append(df)
+    file_path = 'Data/E2.csv'
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
 
-file_path = 'Data/EC.csv'
-df = pd.read_csv(file_path)
-training_leagues.append(df)
+    file_path = 'Data/E3.csv'
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
+
+    file_path = 'Data/EC.csv'
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
+
+else:
+    file_path = 'Data/E0.csv' 
+    df = pd.read_csv(file_path)
+    training_leagues.append(df)
 
 
 state_size = env.observation_space.shape[0]
 number_of_actions = env.action_space.n
 num_episodes = 1
 
-print(state_size, "     ", number_of_actions)
+print("\n",state_size, "     ", number_of_actions, "\n")
 
 '''model = Sequential()
 model.add(Flatten(input_shape=(1, state_size)))
@@ -85,12 +94,24 @@ model.add(Dense(24, activation='relu'))
 model.add(Dense(24, activation='relu'))
 model.add(Dense(number_of_actions, activation='linear'))
 '''
-
+'''
 model = Sequential()
 model.add(Flatten(input_shape=(1, state_size)))
 model.add(Dense(128, activation='relu'))
 model.add(Dense(64, activation='relu'))
+model.add(Dense(64, activation='relu'))
+model.add(Dense(64, activation='relu'))
 model.add(Dense(number_of_actions, activation='linear'))
+'''
+
+model = Sequential()
+model.add(Flatten(input_shape=(1, state_size)))
+#model.add(Dense(243, activation='relu'))
+#model.add(Dense(81, activation='relu'))
+model.add(Dense(128, activation='relu'))
+model.add(Dense(64, activation='relu'))
+model.add(Dense(32, activation='relu'))
+model.add(Dense(number_of_actions, activation='softmax'))
 
 memory = SequentialMemory(limit=50000, window_length=1)
 
@@ -112,9 +133,12 @@ dqn = DQNAgent(model=model,
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 try:
+    ##dqn.load_weights('new_weights_Test1.h5f')
     #dqn.load_weights('dqn_betting_model_weights.h5f')
+    #dqn.load_weights('weights/interesting.h5f')
+    dqn.load_weights('weights/le5e-05hi64acreluopadamru6to10un20re1st1leprem/3.h5f')
     #dqn.load_weights('test_weights.h5f')
-    dqn.load_weights('weights/new_weights_Test_8.h5f')
+    #dqn.load_weights('weights/le0001hi128acreluopadamru6to10un20re1st0.h5f')
     #dqn.load_weights('new_weights_Test_3.h5f')
     print("Weights loaded successfully!")
 except Exception as e:
@@ -123,11 +147,12 @@ except Exception as e:
 episodes = 38
 for test_league in training_leagues:  # test_leagues contains your two new seasons
     env.load_data(test_league)
-    env.set_state(1)
+    env.set_state(envState)
     total_reward = 0
     done = False
     observation = env.reset()
     #print(observation)
+    #exit()
     #or i in range(episodes):
     while not done:
         #print(observation)
@@ -137,6 +162,6 @@ for test_league in training_leagues:  # test_leagues contains your two new seaso
         observation, reward, done, _ = env.step(action)
         #print(reward)
         total_reward += reward
-    input()
     print(f"Total reward for : {total_reward}")
+    #input()
     

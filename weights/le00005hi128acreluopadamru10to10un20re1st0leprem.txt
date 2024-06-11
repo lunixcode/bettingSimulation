@@ -1,0 +1,1 @@
+{"learning_rate": 0.0005, "hidden_layer_size": 128, "activation_function": "relu", "optimizer": "adam", "runsPerSeason": "10", "totalSeasons": "10", "uniqueTeams": "20", "rewardFunc": "1", "stateSpace": "0", "league": "prem"}
